@@ -1,0 +1,38 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+# All Vagrant configuration is done below. The "2" in Vagrant.configure
+# configures the configuration version (we support older styles for
+# backwards compatibility). Please don't change it unless you know what
+# you're doing.
+Vagrant.configure("2") do |this|
+  # Forward ssh-agent for cloning from Github.com
+  this.ssh.forward_agent = true
+  # disable updating guest additions
+  if Vagrant.has_plugin?("vagrant-vbguest")
+    this.vbguest.auto_update = false
+  end
+  # disable guest additions
+  this.vm.synced_folder '.', '/vagrant', disabled: true
+  this.vm.define "web" do |web|
+    web.vm.box = "generic/ubuntu2004"
+    web.vm.hostname = "web"
+
+    this.vm.define :test_vm1 do |test_vm1|
+      test_vm1.vm.network :public_network,
+        :dev => "virbr0",
+        :mode => "bridge",
+        :type => "bridge",
+        :ip => "192.168.121.37"
+    end
+    web.vm.provider "libvirt" do |libvirt|
+      libvirt.title = "web"
+    end
+  end
+  # this.vm.provision "ansible" do |ansible|
+  #   ansible.playbook = "mezzanine.yml"
+  #   ansible.verbose = "v"
+  #   ansible.compatibility_mode = "2.0"
+  #   ansible.host_key_checking = false
+  # end
+end

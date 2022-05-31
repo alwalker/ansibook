@@ -1,0 +1,7 @@
+Mezzanine
+Django
+gunicorn
+setproctitle
+psycopg2
+django-compressor
+python-memcached
