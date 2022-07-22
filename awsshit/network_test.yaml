@@ -1,0 +1,90 @@
+#!/usr/bin/env ansible-playbook
+---
+- name: Testing Big Network Object
+  hosts: localhost
+  connection: local
+  gather_facts: false
+
+  vars:
+    network:
+      address_space: 10.0.0.0/16
+      public_subnets:
+        - az: us-east-1a
+          cidr: 10.0.1.0/24
+        - az: us-east-1b
+          cidr: 10.0.2.0/24
+        - az: us-east-1c
+          cidr: 10.0.3.0/24
+        - az: us-east-1d
+          cidr: 10.0.5.0/24
+        - az: us-east-1e
+          cidr: 10.0.6.0/24
+        - az: us-east-1f
+          cidr: 10.0.7.0/24
+      private_subnets:
+        - az: us-east-1a
+          cidr: 10.0.8.0/24
+        - az: us-east-1b
+          cidr: 10.0.9.0/24
+        - az: us-east-1c
+          cidr: 10.0.10.0/24
+        - az: us-east-1d
+          cidr: 10.0.11.0/24
+        - az: us-east-1e
+          cidr: 10.0.12.0/24
+        - az: us-east-1f
+          cidr: 10.0.13.0/24
+      intranet_subnet_cidr:
+        - az: us-east-1a
+          cidr: 10.0.14.0/24
+        - az: us-east-1b
+          cidr: 10.0.15.0/24
+        - az: us-east-1c
+          cidr: 10.0.16.0/24
+        - az: us-east-1d
+          cidr: 10.0.17.0/24
+        - az: us-east-1e
+          cidr: 10.0.18.0/24
+        - az: us-east-1f
+          cidr: 10.0.19.0/24
+      database_subnet_cidr:
+        - az: us-east-1a
+          cidr: 10.20.0/24
+        - az: us-east-1b
+          cidr: 10.0.21.0/24
+        - az: us-east-1c
+          cidr: 10.0.22.0/24
+        - az: us-east-1d
+          cidr: 10.0.23.0/24
+        - az: us-east-1e
+          cidr: 10.0.24.0/24
+        - az: us-east-1f
+          cidr: 10.0.25.0/24
+
+  tasks:
+    - name: Pretty Print Public Subnets
+      debug:
+        msg: "AZ: {{ item['az'] }}  CIDR: {{ item['cidr'] }}"
+      loop: "{{ network.public_subnets }}"
+      register: public_subnets_results
+      
+    - name: Add Result To Temporary Network Object
+      ansible.utils.update_fact:
+        updates:
+        - path: "network.public_subnets[{{ ansible_loop.index -1 }}]['id']"
+          value: "{{ item['msg'] }}"
+      register: network_modified
+      loop: "{{ public_subnets_results.results }}"
+      loop_control:
+        extended: yes
+    
+    - name: Add Result To Real Network Object
+      set_fact: 
+        network: "{{ network_modified.results[-1].network }}"
+
+    - name: Print All Results
+      debug: var=network
+
+    - name: Print Specific Result
+      debug:
+        msg: "Public Subnet For US-EAST-1a {{ network.public_subnets.0.id }} "
